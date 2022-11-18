@@ -1,4 +1,3 @@
-# TODO: Change the name of the org 
 org: beakal
 app: serverless-todo-app2
 service: serverless-todo-app2
@@ -53,8 +52,8 @@ functions:
           path: /
           method: get
 
-  # Auth:
-  #   handler: src/lambda/auth/auth0Authorizer.handler
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
 
   # TODO: Configure this function - 
   # Provide iamRoleStatements property for performing Actions on DynamoDB
