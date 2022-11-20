@@ -7,7 +7,7 @@ const XAWS = AWSXRay.captureAWS(AWS)
 const s3BucketName = process.env.ATTACHMENT_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
-export class attachmentUtils{
+export class AttachmentUtils {
   constructor(
     private readonly s3 = new XAWS.S3({signatureVersion: 'v4'}),
     private readonly bucketName = s3BucketName
