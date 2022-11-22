@@ -7,6 +7,8 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
 
 provider:
   name: aws
@@ -40,8 +42,22 @@ provider:
         - Effect: Allow
           Action:
             - xray:PutTelemetryRecords
-            - xray:PutTraceSegments
+            # - xray:PutTraceSegments
           Resource: "*"
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Todos App
+        description: Serverless application for todos monitoring
+    models:
+      - name: CreateTodoRequset
+        contentType: application/json
+        schema: ${file(models/create-todo-model.json)}
+      - name: UpdateTodoRequest
+        contentType: application/json
+        schema: ${file(models/update-todo-model.json)}
 
 
 functions:
@@ -57,15 +73,29 @@ functions:
 
   # TODO: Configure this function - 
   # Provide iamRoleStatements property for performing Actions on DynamoDB
-  # GetTodos:
-  #   handler: src/lambda/http/getTodos.handler
-  #   events:
-  #     - http:
-  #         method: get
-  #         path: todos
-  #         cors: true
-  #         authorizer: Auth
-
+  GetTodos:
+    handler: src/lambda/http/getTodos.handler
+    events:
+      - http:
+          method: get
+          path: todos
+          cors: true
+          authorizer: Auth
+    iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-get-todo-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: 
+          - '*'
   # TODO: Configure this function - 
   # Provide iamRoleStatements property. Decide the Actions and AWS Resource. 
   # To refer to an AWS resource defined in the "Resources" section, you can use "Resource: !GetAtt <resource-name>.Arn"
@@ -77,6 +107,11 @@ functions:
           method: post
           path: todos
           cors: true
+          authorizer: Auth
+          reqValidationName : RequestBodyValidator
+          documentation: create a todo task
+          requestModels: 
+            'application/json': CreateTodoRequest
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-create-todo-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -95,31 +130,76 @@ functions:
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements, and request schemas
-  # UpdateTodo:
-  #   handler: src/lambda/http/updateTodo.handler
-  #   events:
-  #     - http:
-  #         method: patch
-  #         path: todos/{todoId}
+  UpdateTodo:
+    handler: src/lambda/http/updateTodo.handler
+    events:
+      - http:
+          method: patch
+          path: todos/{todoId}
+          cors: true
+          authorizer: Auth
+        
+    iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-update-todo-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: 
+          - '*'
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
-  # DeleteTodo:
-  #   handler: src/lambda/http/deleteTodo.handler
-  #   events:
-  #     - http:
-  #         method: delete
-  #         path: todos/{todoId}
+  DeleteTodo:
+    handler: src/lambda/http/deleteTodo.handler
+    events:
+      - http:
+          method: delete
+          path: todos/{todoId}
+          cors: true
+          authorizer: Auth
+        
+    iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-delete-todo-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: 
+          - '*'
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
-  # GenerateUploadUrl:
-  #   handler: src/lambda/http/generateUploadUrl.handler
-  #   events:
-  #     - http:
-  #         method: post
-  #         path: todos/{todoId}/attachment
-
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
+          cors: true
+          authorizer: Auth
+    iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-generate-s3-upload-url-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:*
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource: 
+          - '*'
 resources:
   Resources:
     # Add necessary AWS resources. You will need at least the following AWS resources
@@ -135,6 +215,16 @@ resources:
         ResponseType: DEFAULT_4XX
         RestApiId:
           Ref: ApiGatewayRestApi
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
+
     GatewayResponseDefault5XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:
