@@ -70,7 +70,7 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
     throw new Error('The JWKs endpoint did contain a key')
   }
   const pemData = signingkeys.x5c[0]
-  const cert = `----BEGIN CERTIFICATE----\n${pemData}\n---END CERTIFICATE------`
+  const cert = `----BEGIN CERTIFICATE----\n${pemData}\n---END CERTIFICATE------\n`
   const verifyToken = verify(token,cert,{algorithms:['RS256']}) as JwtPayload
   logger.info('verifyToken', verifyToken)
   return verifyToken

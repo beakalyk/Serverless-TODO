@@ -61,12 +61,12 @@ custom:
 
 
 functions:
-  hello:
-    handler: handler.hello
-    events:
-      - httpApi:
-          path: /
-          method: get
+  # hello:
+  #   handler: handler.hello
+  #   events:
+  #     - httpApi:
+  #         path: /
+  #         method: get
 
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
@@ -109,7 +109,9 @@ functions:
           cors: true
           authorizer: Auth
           reqValidationName : RequestBodyValidator
-          documentation: create a todo task
+          documentation: 
+            summary : create a todo task
+            description : create a todo task
           requestModels: 
             'application/json': CreateTodoRequest
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-create-todo-role-${self:provider.stage}
@@ -138,6 +140,10 @@ functions:
           path: todos/{todoId}
           cors: true
           authorizer: Auth
+          reqValidationName : RequestBodyValidator
+          documentation: 
+            summary : create a todo task
+            description : create a todo task
         
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-update-todo-role-${self:provider.stage}
     iamRoleStatements:
