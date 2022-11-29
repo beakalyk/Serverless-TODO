@@ -44,10 +44,10 @@ export async function createTodo(
 export async function updateTodo(
      todoId: string,
      todoUpdate: UpdateTodoRequest,
-      userId: string
-   ): Promise   <TodoUpdate> {
+     userId: string
+): Promise<TodoUpdate> {
         logger.info('Update to do function called')
-    return todosAcess.updateTodoItem(todoId,userId,todoUpdate)
+    return todosAcess.updateTodoItem(todoId, userId, todoUpdate)
     }
 
     export async function deleteTodo(
@@ -63,6 +63,6 @@ export async function createAttachmentPresignedUrl(
     todoId: string,
     userId: string
 ): Promise <string> {
-    logger.info('Create attachemnt function called by user ',userId,todoId)
+    logger.info('Create attachemnt function called by user ', userId, todoId)
     return attachmentUtils.getUploadUrl(todoId)
 }

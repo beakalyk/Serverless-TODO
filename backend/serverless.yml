@@ -142,9 +142,10 @@ functions:
           authorizer: Auth
           reqValidationName : RequestBodyValidator
           documentation: 
-            summary : create a todo task
-            description : create a todo task
-        
+            summary : update a new  todo task
+            description : update a todo task
+          requestModels: 
+            'application/json': updateTodoRequest
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-update-todo-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -238,10 +239,20 @@ resources:
           gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
           gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
           gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST,DELETE,PATCH,PUT'"
+          
         ResponseType: DEFAULT_5XX
         RestApiId:
           Ref: ApiGatewayRestApi 
-    
+
+    # RequestBodyValidator:
+    #   Type: AWS::ApiGateway::RequestValidator
+    #   Properties:
+    #     Name: 'request-body-validator'
+    #     RestApiId:
+    #       Ref: ApiGatewayRestApi
+    #     ValidateRequestBody: true
+    #     ValidateRequestParameters: false
+
     # TODO: Create a DynamoDB table with local secondary index and a composite key
     # TodosTable:
     #   Type: AWS::DynamoDB::Table

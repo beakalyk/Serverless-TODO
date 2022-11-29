@@ -51,7 +51,9 @@ export class TodosAccess{
         todoUpdate: TodoUpdate
     ): Promise <TodoUpdate> {
         logger.info('Update todo item function called')
-       const result = await this.docClient
+   
+   
+     const result = await this.docClient
         .update({
             TableName: this.todosTable,
             Key: {
