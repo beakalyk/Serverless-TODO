@@ -71,9 +71,9 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   }
   const pemData = signingkeys.x5c[0]
   const cert = `----BEGIN CERTIFICATE----\n${pemData}\n---END CERTIFICATE------\n`
-  const verifyToken = verify(token,cert,{algorithms:['RS256']}) as JwtPayload
-  logger.info('verifyToken', verifyToken)
-  return verifyToken
+  const verifiedToken = verify(token,cert,{algorithms:['RS256']}) as JwtPayload
+  logger.info('verifiedToken', verifyToken)
+  return verifiedToken
   //return undefined
 }
 
